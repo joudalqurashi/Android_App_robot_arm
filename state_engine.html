@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Arm State Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --secondary-dark: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #34495e;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+            --white: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            color: var(--white);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .header h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .header h1 i {
+            margin-left: 0.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 0 1rem;
+            margin: 0 auto;
+        }
+        
+        .refresh-btn {
+            background: var(--secondary);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.7rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            margin: 0 auto 1.5rem;
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--secondary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .refresh-btn i {
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .section h2 i {
+            margin-left: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .motor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .motor-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .motor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .motor-icon {
+            background: var(--primary);
+            color: var(--white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .motor-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 0.3rem;
+            text-align: center;
+        }
+        
+        .motor-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .status-badge i {
+            margin-left: 0.5rem;
+        }
+        
+        .status-running {
+            background: var(--warning);
+            color: var(--white);
+        }
+        
+        .status-completed {
+            background: var(--secondary);
+            color: var(--white);
+        }
+        
+        .timestamp {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        /* Spinner animation for loading state */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fa-spinner {
+            animation: spin 1.5s linear infinite;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 480px) {
+            .container {
+                max-width: 450px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section h2 {
+                font-size: 1.3rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 700px;
+            }
+            
+            .motor-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-robot"></i> Robot Arm State Engine</h1>
+        <div class="subtitle">Real-time Monitoring & Control Dashboard</div>
+    </div>
+
+    <div class="container">
+        <button class="refresh-btn" onclick="loadData()">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+        
+        <!-- Last Run Section -->
+        <div class="section last-run-section">
+            <h2><i class="fas fa-bolt"></i> آخر تشغيل للمحركات</h2>
+            <div id="last-run">
+                <div class="loading">جاري تحميل آخر تشغيل...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://192.168.0.160/robot_arm';
+        
+        // Load all data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateLastUpdated();
+        });
+        
+        function loadData() {
+            loadLastRun();
+            loadPoses();
+            loadRuns();
+            loadStatistics();
+        }
+        
+        function loadLastRun() {
+            fetch(`${baseUrl}/get_last_run.php`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        loadLastRunFromPoses();
+                    } else {
+                        displayLastRun(data);
+                    }
+                })
+                .catch(error => {
+                    loadLastRunFromPoses();
+                });
+        }
+        
+        function displayLastRun(data) {
+          
+            
+            let html = `
+                <div class="motor-grid">
+                    <div class="motor-card">
+                        <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                        <div class="motor-label">المحرك الأول</div>
+                        <div class="motor-value">${data.motor1_angle}°</div>
+                    </div>
+                    <div class="motor-card">
+                        <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                        <div class="motor-label">المحرك الثاني</div>
+                        <div class="motor-value">${data.motor2_angle}°</div>
+                    </div>
+                    <div class="motor-card">
+                        <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                        <div class="motor-label">المحرك الثالث</div>
+                        <div class="motor-value">${data.motor3_angle}°</div>
+                    </div>
+                    <div class="motor-card">
+                        <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                        <div class="motor-label">المحرك الرابع</div>
+                        <div class="motor-value">${data.motor4_angle}°</div>
+                    </div>
+                </div>
+                <br><br>
+                <div class="timestamp">آخر تحديث: ${new Date(data.executed_at).toLocaleString('ar-SA')}</div>
+            `;
+            
+            document.getElementById('last-run').innerHTML = html;
+        }
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 10000);
+    </script>
+</body>
+</html>
