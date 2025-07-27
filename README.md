@@ -27,7 +27,7 @@ the database
 
 
 
-now we will run the app and test it ... -->
+# now we will run the app and test it ... -->
 
 <img width="540" height="1200" alt="image" src="https://github.com/user-attachments/assets/815f37b9-b979-4454-a09a-a821832bdcc0" />
 
